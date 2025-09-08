@@ -21,6 +21,7 @@ apt install gcc \
             python3-pip \
             cmake \
             git \
+            unzip \
             vi
 ```
 
