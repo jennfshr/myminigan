@@ -511,3 +511,42 @@ options:
   --seed S              random seed (default: 42)
 ```
 
+### Save state on running container
+```sh
+# while docker container is running, in a separate shell, do this:
+docker image list # see what container images you have in local cache
+docker ps # list running containers (should see your current running container) and container id
+
+docker commit <container_id> <container_name>:<tag>
+```
+e.g.
+```sh
+jkgreen@s1105469 ~ % docker image list
+REPOSITORY                                TAG               IMAGE ID       CREATED         SIZE
+ubuntu                                    latest            353675e2a41b   7 days ago      139MB
+<none>                                    <none>            9cbed7541129   4 weeks ago     139MB
+jkgreen76/ldms-slingshot-switch-sampler   latest            693f466f5cd4   2 months ago    1.46GB
+<none>                                    <none>            eebf24097528   2 months ago    1.26GB
+foo                                       latest            5fb90c2606cc   2 months ago    1.42GB
+moby/buildkit                             buildx-stable-1   832fa7aa1eb3   3 months ago    312MB
+tonistiigi/binfmt                         latest            1b804311fe87   6 months ago    108MB
+mauwii/ubuntu-act                         22.04             05bf90d6b55c   19 months ago   10GB
+jkgreen@s1105469 ~ % docker ps
+CONTAINER ID   IMAGE           COMMAND       CREATED          STATUS          PORTS     NAMES
+c39a444a79c3   ubuntu:latest   "/bin/bash"   59 minutes ago   Up 59 minutes             gallant_cori
+jkgreen@s1105469 ~ % docker commit c39a444a79c3 ubuntu:jkgreen-test
+sha256:9c175ee53d76e298eaaaf6a0710eada8b0cb8aec3e426dde0ffe0e7afaf0d0cf
+jkgreen@s1105469 ~ % echo $?
+0
+jkgreen@s1105469 ~ % docker image list
+REPOSITORY                                TAG               IMAGE ID       CREATED          SIZE
+ubuntu                                    jkgreen-test      9c175ee53d76   15 seconds ago   1.92GB
+ubuntu                                    latest            353675e2a41b   7 days ago       139MB
+<none>                                    <none>            9cbed7541129   4 weeks ago      139MB
+jkgreen76/ldms-slingshot-switch-sampler   latest            693f466f5cd4   2 months ago     1.46GB
+<none>                                    <none>            eebf24097528   2 months ago     1.26GB
+foo                                       latest            5fb90c2606cc   2 months ago     1.42GB
+moby/buildkit                             buildx-stable-1   832fa7aa1eb3   3 months ago     312MB
+tonistiigi/binfmt                         latest            1b804311fe87   6 months ago     108MB
+mauwii/ubuntu-act                         22.04             05bf90d6b55c   19 months ago    10GB
+```
