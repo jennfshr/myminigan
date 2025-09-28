@@ -24,6 +24,7 @@ jobs:
       DOCKER_REGISTRY: docker.io
       DOCKER_IMAGE: ubuntu
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       DOCKER_TARGET_PLATFORM: linux/amd64/v3
 
