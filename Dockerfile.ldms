@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:22.04
 SHELL ["/bin/bash", "-c"]
 RUN apt update \
     && apt install -y \
@@ -13,17 +13,23 @@ RUN apt update \
        gcc \
        gfortran \
        git \
+       hdf5-tools \
+       libhdf5-openmpi-dev \
+       openmpi-bin \
        unzip \
        less \
        lintian \
+       libjansson-devel \
        libssl-dev \
        libtool \
        make \
-       python3 \
-       python3-dev \
+       python3.10 \
+       python3-dev-is-python3 \
        python3-pip \
+       python3-docutils \
        pkg-config \
        vim
+
 RUN bash <<EOF
 set -x && \
 mkdir -p ovis-ldms-debian-package && \
@@ -32,9 +38,9 @@ export DEBEMAIL="jkgreen@sandia.gov" && \
 export DEBFULLNAME="Jennifer K. Green" && \
 export DEB_BUILD_ARCH="amd64" && \
 echo "Cloning ovis" && \
-git clone http://github.com/ovis-hpc/ovis.git -b v4.4.5 ovis-ldms-4.4.5 && \
-tar cfJ ovis-ldms-4.4.5.tar.xz ovis-ldms-4.4.5 && cd ovis-ldms-4.4.5 && \
-dh_make -i -y -f ../ovis-ldms-4.4.5.tar.xz -e jkgreen@sandia.gov -c bsd && [ -f debian/control ] && \
+git clone http://github.com/ovis-hpc/ovis.git -b main ovis-ldms-main && \
+tar cfJ ovis-ldms-main.tar.xz ovis-ldms-main && cd ovis-ldms-main && \
+dh_make -i -y -f ../ovis-ldms-main.tar.xz -e jkgreen@sandia.gov -c bsd && [ -f debian/control ] && \
 echo "\
 Source: ovis-ldms
 Priority: optional
@@ -65,7 +71,7 @@ Depends:
  libssl-dev [amd64],
  python3-dev [amd64],
  bash [amd64]
-Description: LDMS v4.4.5
+Description: LDMS Main
 " > \$PWD/debian/control && \
 echo "13" > \$PWD/debian/compat && \
 cat \$PWD/debian/control && \
