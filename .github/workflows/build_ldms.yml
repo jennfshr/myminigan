@@ -25,6 +25,7 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       DOCKER_TARGET_PLATFORM: linux/amd64/v3
+      DOCKER_PUSH_TARGET_IMAGE: ldms
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -47,7 +48,7 @@ jobs:
       id: prepare
       run: |
         echo ::set-output name=docker_platform::${DOCKER_TARGET_PLATFORM}
-        echo ::set-output name=docker_image::${DOCKER_REGISTRY}/${DOCKER_IMAGE}
+        echo ::set-output name=docker_image::${DOCKER_REGISTRY}/jkgreen/${DOCKER_PUSH_TARGET_IMAGE}
         echo ::set-output name=version::${GITHUB_RUN_NUMBER}
 
     - name: Login to Docker Hub
