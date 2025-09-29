@@ -28,7 +28,7 @@ export DEB_BUILD_ARCH="amd64" && \
 echo "Cloning ovis" && \
 git clone http://github.com/ovis-hpc/ovis.git -b v4.4.5 ovis-ldms-4.4.5 && \
 tar cfJ ovis-ldms-4.4.5.tar.xz ovis-ldms-4.4.5 && cd ovis-ldms-4.4.5 && \
-dh_make -i -y -f ../ovis-ldms-4.4.5.tar.xz -e jkgreen@sandia.gov -c bsd && [ -f debian/control ] && 
+dh_make -i -y -f ../ovis-ldms-4.4.5.tar.xz -e jkgreen@sandia.gov -c bsd && [ -f debian/control ] && \
 echo "\
 Source: ovis-ldms
 Priority: optional
@@ -59,7 +59,7 @@ Depends:
  libssl-dev [amd64],
  python3-dev [amd64],
  bash [amd64]
-Description: LDMS for SlingShot Switches
+Description: LDMS v4.4.5
 " > \$PWD/debian/control && \
 echo "13" > \$PWD/debian/compat && \
 cat \$PWD/debian/control && \
