@@ -103,3 +103,85 @@ cd ovis-ldms-debian-package && \
 dpkg -i ovis-ldms-4.5.1_4.5.1-1_arm64.deb
 
 RUN apt clean -y
+EOF
+
+RUN bash <<EOF
+git clone https://github.com/spack/spack.git -b develop myspack
+source myspack/share/spack/setup-env.sh
+spack env create myminigan
+spack env list # should show this new env
+spack env activate myminigan
+spack env status # should show myminigan is active
+spack compiler find
+spack compiler list # should list gfortran and gcc
+spack install --add minigan
+spack load minigan
+export PYTHONPATH=/myspack/var/spack/environments/minigan/.spack-env/view/lib/python3.11/site-packages
+EOF
+
+RUN bash <<EOF
+cat<<- HERE >set-ldms-env.sh # Create an script to easily setup the LDMS paths and variables
+#!/bin/sh
+export LDMS_INSTALL_PATH=/home/ubuntu/ovis/build
+export LD_LIBRARY_PATH=\$LDMS_INSTALL_PATH/lib/:\$LD_LIBRARY_PATH
+export LDMSD_PLUGIN_LIBPATH=\$LDMS_INSTALL_PATH/lib/ovis-ldms
+export ZAP_LIBPATH=\$LDMS_INSTALL_PATH/lib/ovis-ldms
+export PATH=\$LDMS_INSTALL_PATH/sbin:\$LDMS_INSTALL_PATH/bin:$PATH
+export PYTHONPATH=/usr/local/lib/python3.10/dist-packages
+ 
+export COMPONENT_ID="1"
+export SAMPLE_INTERVAL="1000000"
+export SAMPLE_OFFSET="0"
+export HOSTNAME="localhost"
+HERE
+EOF
+
+RUN bash <<EOF
+source set-ldms-env.sh
+git clone https://github.com/darshan-hpc/darshan.git
+cd darshan
+mkdir build
+./prepare.sh && cd build/
+../configure --with-log-path=${HOME}/darshan/build/logs --prefix=\${HOME}/darshan/build/install --with-jobid-env=SLURM_JOBID CC=mpicc --enable-ldms-mod --with-ldms=/usr
+make
+make install
+EOF
+
+RUN bash <<EOF
+cat <<-HERE_DARSHAN>set-ldms-darshan-env.sh #- Create an script to easily setup the Darshan paths and variables:
+#!/bin/sh
+export DARSHAN_INSTALL_PATH=/home/ubuntu/darshan/build/install/
+export LD_PRELOAD=/home/ubuntu/darshan/build/install/lib/libdarshan.so
+export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$DARSHAN_INSTALL_PATH/lib
+export DARSHAN_MOD_ENABLE="DXT_POSIX,DXT_MPIIO"
+ 
+# enable LDMS data collection. No runtime data collection will occur if this is not exported.
+export DARSHAN_LDMS_ENABLE=
+# determine which modules we want to publish to ldmsd
+export DARSHAN_LDMS_ENABLE_MPIIO=
+export DARSHAN_LDMS_ENABLE_POSIX=
+export DARSHAN_LDMS_ENABLE_STDIO=
+export DARSHAN_LDMS_ENABLE_HDF5=
+export DARSHAN_LDMS_ENABLE_ALL=
+export DARSHAN_LDMS_VERBOSE=
+ 
+# darshanConnector
+export DARSHAN_LDMS_STREAM=darshanConnector
+export DARSHAN_LDMS_XPRT=sock
+export DARSHAN_LDMS_HOST=localhost
+export DARSHAN_LDMS_PORT=10444
+export DARSHAN_LDMS_AUTH=none
+HERE_DARSHAN
+EOF
+
+RUN bash <<EOF
+source ./set-ldms-darshan-env.sh
+cat <<-HERE_CONF >darshan_stream_store.conf #- Create the LDMS stream configuration file:
+load name=hello_sampler
+config name=hello_sampler producer=${HOSTNAME} instance=${HOSTNAME}/hello_sampler stream=darshanConnector component_id=${COMPONENT_ID}
+start name=hello_sampler interval=${SAMPLE_INTERVAL} offset=${SAMPLE_OFFSET}
+ 
+load name=stream_csv_store
+config name=stream_csv_store path=./streams/store container=csv stream=darshanConnector rolltype=3 rollover=500000
+HERE_CONF
+EOF
