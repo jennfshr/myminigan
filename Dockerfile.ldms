@@ -50,9 +50,9 @@ export DEBFULLNAME="Jennifer K. Green" && \
 export DEB_BUILD_OPTIONS='parallel=16' && \
 export DEB_BUILD_ARCH="amd64" && \
 echo "Cloning ovis" && \
-git clone http://github.com/ovis-hpc/ovis.git -b main ovis-ldms-main && \
-tar cfJ ovis-ldms-main.tar.xz ovis-ldms-main && cd ovis-ldms-main && \
-dh_make -i -y -f ../ovis-ldms-main.tar.xz -e jkgreen@sandia.gov -c bsd && [ -f debian/control ] && \
+git clone http://github.com/ovis-hpc/ovis.git -b main ovis-ldms && \
+tar cfJ ovis-ldms-main.tar.xz ovis-ldms && cd ovis-ldms && \
+dh_make -i -y -f ../ovis-ldms.tar.xz -e jkgreen@sandia.gov -c bsd && [ -f debian/control ] && \
 echo "\
 Source: ovis-ldms
 Priority: optional
