@@ -550,3 +550,139 @@ moby/buildkit                             buildx-stable-1   832fa7aa1eb3   3 mon
 tonistiigi/binfmt                         latest            1b804311fe87   6 months ago     108MB
 mauwii/ubuntu-act                         22.04             05bf90d6b55c   19 months ago    10GB
 ```
+
+## LDMS+Darshan
+### Install dependencies
+```bash
+sudo apt-get install autoconf -y 
+sudo apt-get install pkg-config -y
+sudo apt-get update -y
+
+sudo apt-get install hdf5-tools libhdf5-openmpi-dev openmpi-bin -y
+sudo apt-get install python3.10 -y 
+sudo apt-get install python-dev-is-python3 -y
+sudo apt-get install make -y 
+sudo apt-get install bison -y 
+sudo apt-get install flex -y
+sudo apt-get update -y
+ 
+sudo apt update
+sudo apt install python3-docutils
+sudo apt-get update
+sudo apt-get install libjansson-dev -y
+```
+### Clone LDMS
+```bash 
+git clone https://github.com/ovis-hpc/ovis.git 
+```
+### Build LDMS
+```bash
+cd ovis && mkdir build
+./autogen.sh && cd build
+../configure --prefix=${HOME}/ovis/build 
+make
+make install
+```
+### set-ldms-env.sh 
+```bash
+cat<<- HERE >set-ldms-env.sh # Create an script to easily setup the LDMS paths and variables
+#!/bin/sh
+export LDMS_INSTALL_PATH=/home/ubuntu/ovis/build
+export LD_LIBRARY_PATH=$LDMS_INSTALL_PATH/lib/:$LD_LIBRARY_PATH
+export LDMSD_PLUGIN_LIBPATH=$LDMS_INSTALL_PATH/lib/ovis-ldms
+export ZAP_LIBPATH=$LDMS_INSTALL_PATH/lib/ovis-ldms
+export PATH=$LDMS_INSTALL_PATH/sbin:$LDMS_INSTALL_PATH/bin:$PATH
+export PYTHONPATH=/usr/local/lib/python3.10/dist-packages
+ 
+export COMPONENT_ID="1"
+export SAMPLE_INTERVAL="1000000"
+export SAMPLE_OFFSET="0"
+export HOSTNAME="localhost"
+HERE
+```
+```bash
+source set-ldms-env.sh
+git clone https://github.com/darshan-hpc/darshan.git
+cd darshan
+mkdir build
+./prepare.sh && cd build/
+../configure --with-log-path=${HOME}/darshan/build/logs --prefix=${HOME}/darshan/build/install --with-jobid-env=PBS_JOBID CC=mpicc --enable-ldms-mod --with-ldms=${HOME}/ovis/build
+make
+make install
+```
+```bash
+cat <<-HERE_DARSHAN>set-ldms-darshan-env.sh #- Create an script to easily setup the Darshan paths and variables:
+#!/bin/sh
+export DARSHAN_INSTALL_PATH=/home/ubuntu/darshan/build/install/
+export LD_PRELOAD=/home/ubuntu/darshan/build/install/lib/libdarshan.so
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$DARSHAN_INSTALL_PATH/lib
+export DARSHAN_MOD_ENABLE="DXT_POSIX,DXT_MPIIO"
+ 
+# enable LDMS data collection. No runtime data collection will occur if this is not exported.
+export DARSHAN_LDMS_ENABLE=
+# determine which modules we want to publish to ldmsd
+export DARSHAN_LDMS_ENABLE_MPIIO=
+export DARSHAN_LDMS_ENABLE_POSIX=
+export DARSHAN_LDMS_ENABLE_STDIO=
+export DARSHAN_LDMS_ENABLE_HDF5=
+export DARSHAN_LDMS_ENABLE_ALL=
+export DARSHAN_LDMS_VERBOSE=
+ 
+# darshanConnector
+export DARSHAN_LDMS_STREAM=darshanConnector
+export DARSHAN_LDMS_XPRT=sock
+export DARSHAN_LDMS_HOST=localhost
+export DARSHAN_LDMS_PORT=10444
+export DARSHAN_LDMS_AUTH=none
+HERE_DARSHAN
+```
+### Set paths and variables for Darshan:
+ 
+```bash
+source ./set-ldms-darshan-env.sh
+```
+
+```bash
+cat <<-HERE_CONF >darshan_stream_store.conf #- Create the LDMS stream configuration file:
+load name=hello_sampler
+config name=hello_sampler producer=${HOSTNAME} instance=${HOSTNAME}/hello_sampler stream=darshanConnector component_id=${COMPONENT_ID}
+start name=hello_sampler interval=${SAMPLE_INTERVAL} offset=${SAMPLE_OFFSET}
+ 
+load name=stream_csv_store
+config name=stream_csv_store path=./streams/store container=csv stream=darshanConnector rolltype=3 rollover=500000
+HERE_CONF
+```
+### [TERMINAL 1] Run the deamon:
+```bash
+sudo chmod 1777 /var/run/
+ldmsd -x sock:10444 -c darshan_stream_store.conf -l /tmp/darshan_stream_store.log -v DEBUG 
+cat /tmp/darshan_stream_store.log
+ldms_ls -p 10444 -x sock -v -v
+ps auwx | grep ldmsd | grep -v grep
+``` 
+
+### (If doesn’t work, try:)
+```bash
+export PATH=$PATH:/home/ubuntu/ovis/build/sbin
+source ~/.bashrc
+which ldmsd
+---->/home/ubuntu/ovis/build/sbin/ldmsd
+```
+### [TERMINAL 2] Run the python application:
+```bash 
+source set-ldms-darshan-env.sh
+export PROG=mpi-io-test
+export DARSHAN_TMP=/tmp/darshan-ldms-test
+export DARSHAN_TESTDIR=/home/ubuntu/darshan/darshan-test/regression
+export DARSHAN_LOGFILE=$DARSHAN_TMP/${PROG}.darshan
+ 
+mkdir -p $DARSHAN_TMP
+cd $DARSHAN_TESTDIR
+mpicc $DARSHAN_TESTDIR/test-cases/src/${PROG}.c -o $DARSHAN_TMP/${PROG}
+cd $DARSHAN_TMP
+./${PROG} -f $DARSHAN_TMP/${PROG}.tmp.dat
+```
+### Check results collected by the LDMS stream:
+```bash
+cat /tmp/darshan_stream_store.log
+```
