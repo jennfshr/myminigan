@@ -22,7 +22,7 @@ apt install gcc \
             cmake \
             git \
             unzip \
-            vi
+            vim
 ```
 
 ### Spack Environment Create
