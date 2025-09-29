@@ -51,8 +51,8 @@ export DEB_BUILD_OPTIONS='parallel=16' && \
 export DEB_BUILD_ARCH="amd64" && \
 echo "Cloning ovis" && \
 git clone http://github.com/ovis-hpc/ovis.git -b main ovis-ldms && \
-tar cfJ ovis-ldms.tar.xz ovis-ldms && cd ovis-ldms && \
-dh_make -i -y -f ../ovis-ldms.tar.xz -e jkgreen@sandia.gov -c bsd && [ -f debian/control ] && \
+tar cfJ ovis-ldms.tar.xz ovis-ldms && \
+dh_make -i -y -f ovis-ldms.tar.xz -e jkgreen@sandia.gov -c bsd && [ -f debian/control ] && \
 echo "\
 Source: ovis-ldms
 Priority: optional
