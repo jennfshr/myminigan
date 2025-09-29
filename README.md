@@ -425,7 +425,7 @@ minigan@1.0.0  /myspack/opt/spack/linux-aarch64/minigan-1.0.0-3jc7li3xllfb6nwkmx
 ==> 0 concretized packages to be installed (show with `spack find -c`)
 (minigan_torch_env) root@88f25d453432:~/myminiGan#  pushd /myspack/opt/spack/linux-aarch64/minigan-1.0.0-3jc7li3xllfb6nwkmxnd3i476c76v2x3
 ```
-### Setup PTYHONPATH to use the right site-packages
+### Setup PYTHONPATH to use the right site-packages
 ```sh
 export PYTHONPATH=/myspack/var/spack/environments/minigan/.spack-env/view/lib/python3.11/site-packages
 ```
