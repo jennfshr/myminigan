@@ -97,3 +97,9 @@ echo -e "\\tdh_auto_configure -- --disable-store-avro-kafka --with-kafka=no --di
 cat \$PWD/debian/rules && \
 debuild -uc -us
 EOF
+
+RUN bash <<EOF
+cd ovis-ldms-debian-package && \
+dpkg -i ovis-ldms-4.5.1_4.5.1-1_arm64.deb
+
+RUN apt clean -y
