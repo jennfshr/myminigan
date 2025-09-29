@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as ldms-minigan:latest
+FROM ubuntu:22.04 as ldmsminigan:latest
 SHELL ["/bin/bash", "-c"]
 RUN apt update -y \
     && apt install -y \
