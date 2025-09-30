@@ -106,20 +106,6 @@ EOF
 RUN apt clean
 
 RUN bash <<EOF
-git clone https://github.com/spack/spack.git -b develop myspack && \
-source myspack/share/spack/setup-env.sh && \
-spack env create myminigan && \
-spack env list && \
-spack env activate myminigan && \
-spack env status && \
-spack compiler find && \
-spack compiler list && \
-spack install --add minigan  && \
-spack load minigan  && \
-export PYTHONPATH=/myspack/var/spack/environments/minigan/.spack-env/view/lib/python3.11/site-packages
-EOF
-
-RUN bash <<EOF
 echo "#!/bin/sh
 export LDMS_INSTALL_PATH=/home/ubuntu/ovis/build
 export LD_LIBRARY_PATH=\$LDMS_INSTALL_PATH/lib/:\$LD_LIBRARY_PATH
